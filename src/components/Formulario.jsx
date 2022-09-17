@@ -1,14 +1,33 @@
 import {useState, useEffect} from 'react';
+import Error from './Error';
 
-function Formulario() {
+function Formulario({pacientes, setPacientes, paciente, setPaciente}) {
 
-  const [nombre, setNombre] = useState('')
+
+  const [nombre, setNombre]           = useState('')
   const [propietario, setPropietario] = useState('')
-  const [correo, setCorreo] = useState('')
-  const [alta, setAlta] = useState('')
-  const [sintomas, setSintomas] = useState('')
+  const [correo, setCorreo]           = useState('')
+  const [alta, setAlta]               = useState('')
+  const [sintomas, setSintomas]       = useState('')
 
-  const [error, setError] = useState(false)
+  const [error, setError]             = useState(false)
+
+
+  useEffect(() => {
+    if(Object.keys(paciente).length > 0 ){
+     setNombre(paciente.nombre)
+     setPropietario(paciente.propietario)
+     setCorreo(paciente.correo)
+     setAlta(paciente.alta)
+     setSintomas(paciente.sintomas)
+    }
+  },[paciente])
+
+  const generarId = () => {
+    const random = Math.random().toString(36).substr(2);
+    const fecha = Date.now().toString(36)
+    return random + fecha
+  }
 
   const handleSubmit = (e) => {
     e.preventDefault()
@@ -18,6 +37,36 @@ function Formulario() {
         return 
     }
     setError(false)
+    //Guardando datos en un objeto
+    const objetoPaciente = {
+      nombre, 
+      propietario, 
+      correo, 
+      alta, 
+      sintomas,
+    }
+
+    //Validando si estamos editando o estamos agregando un nuevo objeto
+    if (paciente.id) {
+      //Editando registro
+      objetoPaciente.id = paciente.id
+      const pacienteActualizado =  pacientes.map(pacienteState => pacienteState.id === paciente.id ? objetoPaciente : pacienteState)
+      setPacientes(pacienteActualizado)
+      setPaciente({})
+    }else{
+      //Agregando Registro
+      objetoPaciente.id = generarId()
+      setPacientes([...pacientes, objetoPaciente])
+    }
+
+    //Agregando datos al array pacientes, haciendo una copia previa de él.
+    
+    //Reseteanos los imputs del formulario
+    setNombre('')
+    setPropietario('')
+    setCorreo('')
+    setAlta('')
+    setSintomas('')
   }
 
   return (
@@ -31,11 +80,9 @@ function Formulario() {
         onSubmit={handleSubmit}
         className="bg-white shadow-md rounded-lg py-10 px-5 mb-10"
       >
-        { error && (
-          <div className='bg-red-600 text-white text-center p-3 uppercase font-bold mb-3 rounded-md'>
-            <p>Todos los campos son obligatorios</p>
-          </div>
-        )}
+        { error && <Error 
+          mensaje="Todos los campos son obligatorios"
+        />}
         <div className="mb-5">
           <label htmlFor="mascota" className="block text-gray-700 uppercase">Nombre de la mascota: </label>
           <input 
@@ -94,7 +141,7 @@ function Formulario() {
         <input 
           type="submit" 
           className="bg-indigo-600 w-full p-3 text-white uppercase font-bold rounded-md hover:bg-indigo-700 cursor-pointer transition-none"
-          value="Agregar paciente"
+          value={paciente.id ? 'Editar Paciente' : 'Agregar paciente'} 
         />
       </form>
     </div>
